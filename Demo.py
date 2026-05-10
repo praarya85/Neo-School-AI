@@ -3,144 +3,146 @@ import google.generativeai as genai
 from PyPDF2 import PdfReader
 
 # --- 1. CONFIGURATION & BRANDING ---
-# Replace this URL with your actual Cybergeon logo link or local path
-LOGO_URL = "https://cybergeontechnologies.com/logo.jpg"
+# Use your actual logo URL here
+LOGO_URL = "https://via.placeholder.com/150" 
 
 st.set_page_config(
-    page_title="Neo-Edu | Powered by Cybergeon",
+    page_title="Neo-Edu | Cybergeon Technologies",
     page_icon="🦋",
     layout="wide"
 )
 
-# --- 2. THE "SOBER & RICH" CSS ---
-def apply_cybergeon_theme():
-    st.markdown(f"""
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
-        
-        html, body, [class*="css"] {{
-            font-family: 'Inter', sans-serif;
-            color: #2D3436;
-        }}
+# --- 2. THE ULTRA-RICH "SOBER" CSS ---
+st.markdown(f"""
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+    
+    html, body, [class*="css"] {{
+        font-family: 'Inter', sans-serif;
+    }}
 
-        /* Clean, Professional Background */
-        .main {{
-            background: #F8F9FA;
-        }}
+    /* Professional Background */
+    .main {{
+        background-color: #fcfcfd;
+    }}
 
-        /* Sidebar: Sober & Minimalist */
-        [data-testid="stSidebar"] {{
-            background-color: #FFFFFF !important;
-            border-right: 1px solid #E0E0E0;
-        }}
+    /* Glassmorphism Sidebar */
+    [data-testid="stSidebar"] {{
+        background-color: #ffffff !important;
+        border-right: 1px solid #f0f0f0;
+    }}
 
-        /* Cybergeon Signature Gradient Button */
-        .stButton > button {{
-            width: 100%;
-            background: linear-gradient(135deg, #6C5CE7 0%, #a29bfe 100%) !important;
-            color: white !important;
-            border-radius: 8px !important;
-            border: none !important;
-            font-weight: 600 !important;
-            padding: 0.6rem !important;
-            transition: 0.3s all ease;
-        }}
-        
-        .stButton > button:hover {{
-            box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
-            transform: translateY(-1px);
-        }}
+    /* Cybergeon Primary Button */
+    .stButton > button {{
+        width: 100%;
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+        color: white !important;
+        border-radius: 12px !important;
+        border: none !important;
+        font-weight: 600 !important;
+        padding: 0.7rem !important;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }}
+    
+    .stButton > button:hover {{
+        box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4);
+        transform: translateY(-2px);
+    }}
 
-        /* Rich Glass Cards for Results */
-        .report-card {{
-            background: white;
-            padding: 2rem;
-            border-radius: 12px;
-            border: 1px solid #E0E0E0;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-        }}
+    /* Result Card Styling */
+    .audit-card {{
+        background: white;
+        padding: 2.5rem;
+        border-radius: 20px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+        line-height: 1.6;
+    }}
+</style>
+""", unsafe_allow_html=True)
 
-        .logo-text {{
-            font-size: 22px;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            color: #2D3436;
-            margin-bottom: 0px;
-        }}
-        
-        .subtitle {{
-            font-size: 12px;
-            color: #636E72;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }}
-    </style>
-    """, unsafe_allow_html=True)
+# --- 3. CORE LOGIC & REASONING ---
+if "GEMINI_API_KEY" in st.secrets:
+    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+else:
+    st.error("API Key missing in Streamlit Secrets.")
+    st.stop()
 
-apply_cybergeon_theme()
+# Using stable model ID for reliable performance
+MODEL_ID = 'gemini-1.5-flash' 
+model = genai.GenerativeModel(MODEL_ID)
 
-# --- 3. SIDEBAR BRANDING ---
+def extract_text(file):
+    try:
+        reader = PdfReader(file)
+        text = " ".join([page.extract_text() for page in reader.pages if page.extract_text()])
+        return text.strip()
+    except Exception as e:
+        st.error(f"Read Error: {e}")
+        return ""
+
+def run_ai_audit(exam_text, syllabus_text):
+    prompt = f"""
+    You are Neo-Edu, an expert AI School Administrator for Cybergeon Technologies.
+    Compare the [EXAM PAPER] against the [MASTER SYLLABUS].
+    
+    Provide:
+    1. A percentage match.
+    2. List of topics missing in the exam.
+    3. Any questions that are OUTSIDE the provided syllabus.
+    4. Professional feedback for faculty in both English and Hindi.
+
+    EXAM: {exam_text[:15000]}
+    SYLLABUS: {syllabus_text[:15000]}
+    """
+    response = model.generate_content(prompt)
+    return response.text
+
+# --- 4. UI STRUCTURE ---
 with st.sidebar:
     st.image(LOGO_URL, width=80)
-    st.markdown("<p class='logo-text'>Cybergeon</p>", unsafe_allow_html=True)
-    st.markdown("<p class='subtitle'>Technologies</p>", unsafe_allow_html=True)
+    st.markdown("### Cybergeon\n**Technologies**")
     st.divider()
-    
-    st.info("**Neo-Edu Engine v2.5**\n\nStatus: Secure & Reasoning Active")
-    st.write("---")
-    st.caption("© 2026 Cybergeon Technologies. All rights reserved.")
+    st.markdown("#### Engine Settings")
+    st.caption("Mode: High-Reasoning")
+    st.caption("Agent: Neo-Edu 2.5")
 
-# --- 4. MAIN INTERFACE ---
-# Header Section
-col_logo, col_title = st.columns([1, 8])
-with col_logo:
-    st.image(LOGO_URL, width=100)
-with col_title:
-    st.markdown("<h1 style='margin-bottom:0;'>Neo-Edu: <span style='color:#6C5CE7;'>Syllabus Auditor</span></h1>", unsafe_allow_html=True)
-    st.markdown("<p style='font-size:18px; opacity:0.7;'>High-fidelity academic compliance powered by Cybergeon AI.</p>", unsafe_allow_html=True)
+# Header
+st.markdown("# 🦋 Neo-Edu: <span style='color:#4f46e5'>Syllabus Auditor</span>", unsafe_allow_html=True)
+st.markdown("Focusing on educational compliance and faculty excellence.")
+st.write("---")
 
-st.write("##")
+col1, col2 = st.columns(2)
+with col1:
+    st.markdown("### 📄 Exam Paper")
+    exam_file = st.file_uploader("Upload Question Paper (PDF)", type=['pdf'])
 
-# Content Columns
-c1, c2 = st.columns(2)
-with c1:
-    st.markdown("### 📁 Upload Exam Paper")
-    exam_file = st.file_uploader("Drop PDF here", type=['pdf'], key="exam")
-
-with c2:
+with col2:
     st.markdown("### 📚 Master Syllabus")
-    syll_file = st.file_uploader("Drop Reference PDF here", type=['pdf'], key="syll")
+    syll_file = st.file_uploader("Upload Syllabus Reference (PDF)", type=['pdf'])
 
-# --- 5. EXECUTION ---
+# --- 5. THE AUDIT PROCESS ---
 if exam_file and syll_file:
-    st.write("---")
     if st.button("🚀 INITIATE DEEP AUDIT"):
-        with st.status("Neo-Edu is processing...", expanded=True) as status:
-            # Note: Logic for text extraction remains the same as your original
-            st.write("Synchronizing with Master Syllabus...")
-            # (Simulation of extraction & AI call)
-            # analysis_result = run_ai_audit(e_text, s_text)
+        with st.status("Neo is analyzing documents...", expanded=True) as status:
+            e_text = extract_text(exam_file)
+            s_text = extract_text(syll_file)
             
-            status.update(label="Audit Successfully Completed", state="complete")
-        
-        # Displaying result in a "Rich" container
-        st.markdown("""
-        <div class="report-card">
-            <h3>📊 Audit Findings</h3>
-            <hr>
-            <p><i>The AI analysis would appear here based on your run_ai_audit function.</i></p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.write("##")
-        if st.button("📨 Send Official Notice to Faculty"):
-            st.balloons()
-            st.toast("Draft sent to Cybergeon Management Portal.")
-
+            if e_text and s_text:
+                analysis = run_ai_audit(e_text, s_text)
+                status.update(label="Audit Complete", state="complete")
+                
+                st.markdown("### 📊 Analysis Result")
+                st.markdown(f'<div class="audit-card">{analysis}</div>', unsafe_allow_html=True)
+                
+                st.write("##")
+                if st.button("📧 Send to Faculty Portal"):
+                    st.balloons()
+                    st.success("Analysis dispatched to Cybergeon Management.")
+            else:
+                status.update(label="Parsing Error", state="error")
+                st.error("Could not extract enough text from the PDFs. Please check the file quality.")
 else:
     st.write("##")
-    st.markdown("""
-        <div style="text-align: center; padding: 40px; border: 2px dashed #E0E0E0; border-radius: 12px;">
-            <p style="color: #636E72;">Welcome, Mr. Arya. Please upload the required documents to begin the session.</p>
-        </div>
-    """, unsafe_allow_html=True)
+    st.info("Waiting for document upload to begin the analysis.")
