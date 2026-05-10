@@ -4,7 +4,7 @@ from PyPDF2 import PdfReader
 
 # --- 1. CONFIGURATION & BRANDING ---
 # Use your actual logo URL here
-LOGO_URL = "https://via.placeholder.com/150" 
+LOGO_URL = "https://cybergeontechnologies.com/logo.jpg" 
 
 st.set_page_config(
     page_title="Neo-Edu | Cybergeon Technologies",
@@ -70,7 +70,7 @@ else:
     st.stop()
 
 # Using stable model ID for reliable performance
-MODEL_ID = 'gemini-1.5-flash' 
+MODEL_ID = 'gemini-2.5-flash' 
 model = genai.GenerativeModel(MODEL_ID)
 
 def extract_text(file):
