@@ -18,7 +18,7 @@ try:
     # which can be toggled in the generation config if needed.
     model = genai.GenerativeModel(MODEL_ID)
 except Exception as e:
-    st.error(f"Failed to initialize Gemini 2.5: {e}")
+    st.error(f"Failed to initialize Neo 2.5: {e}")
     st.stop()
 
 # --- 2. HELPER FUNCTIONS ---
@@ -58,7 +58,7 @@ def run_ai_audit(exam_text, syllabus_text):
     - **Missing Topics:** (List any key syllabus items not tested)
     
     ### 📝 Faculty Feedback (HINDI)
-    (Write a professional notice in Hindi for the teacher regarding these results)
+    (Write a professional notice in Hindi and English for the teacher regarding these results)
     
     [EXAM PAPER]:
     {exam_text[:20000]} 
@@ -77,13 +77,13 @@ def run_ai_audit(exam_text, syllabus_text):
 st.set_page_config(page_title="Neo-Edu | Cybergeon", page_icon="🦋", layout="wide")
 
 with st.sidebar:
-    st.title("Neo-Edu v4.0")
+    st.title("Neo-Edu AI Agent")
     st.subheader(f"Engine: {MODEL_ID}")
     st.info("Status: High-Reasoning Mode Active")
     st.divider()
     st.write("**Cybergeon Technologies**")
 
-st.title("🦋 Neo-Edu: Gemini 2.5 Syllabus Auditor")
+st.title("🦋 Neo-Edu:  Syllabus Auditor")
 st.write("Leveraging Generational Reasoning for Educational Compliance.")
 
 col1, col2 = st.columns(2)
@@ -117,4 +117,4 @@ if exam_file and syll_file:
             st.balloons()
             st.success("Drafted and queued for delivery.")
 else:
-    st.info("Upload documents to begin the Gemini 2.5 audit.")
+    st.info("Upload documents to begin the Neo 2.5 audit.")
