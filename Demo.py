@@ -5,7 +5,7 @@ import time
 st.set_page_config(page_title="Neo-Edu | Cybergeon", page_icon="🦋")
 
 # --- Sidebar (The "AMD Proof" Hack) ---
-st.sidebar.image("https://cybergeontechnologies.com/wp-content/uploads/2024/02/cybergeon-logo.png", width=200) # Use your logo URL
+st.sidebar.image("https://cybergeontechnologies.com/logo.jpg", width=200) # Use your logo URL
 st.sidebar.title("System Status")
 st.sidebar.success("AMD ROCm: ACTIVE")
 st.sidebar.info("Compute: AMD Radeon™ GPU")
