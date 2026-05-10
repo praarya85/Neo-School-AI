@@ -4,15 +4,23 @@ from PyPDF2 import PdfReader
 import time
 
 # --- 1. SECURE CONFIGURATION ---
-# Access the API key from .streamlit/secrets.toml or Streamlit Cloud Secrets
+# The key you provided earlier should be placed in the Streamlit Secrets sidebar 
+# under the name: GEMINI_API_KEY
 if "GEMINI_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 else:
     st.error("API Key not found! Please add GEMINI_API_KEY to your Streamlit Secrets.")
     st.stop()
 
-# Initialize the model (Free Tier)
-model = genai.GenerativeModel('gemini-1.5-flash')
+# UPDATED: Using 'gemini-1.5-flash-latest' for better compatibility
+# You can also use 'gemini-1.5-pro-latest' if you want more reasoning power
+MODEL_ID = 'gemini-1.5-flash-latest' 
+
+try:
+    model = genai.GenerativeModel(MODEL_ID)
+except Exception as e:
+    st.error(f"Failed to initialize model: {e}")
+    st.stop()
 
 # --- 2. HELPER FUNCTIONS ---
 def extract_text_pypdf(file):
@@ -35,7 +43,7 @@ def run_ai_audit(exam_text, syllabus_text):
     You are Neo-Edu, an expert AI School Administrator for the Indian K-12 market.
     
     TASK:
-    Compare the [EXAM PAPER] text against the [MASTER SYLLABUS] text.
+    Compare the [EXAM PAPER] text against the [MASTER SYLLABUS] text provided below.
     
     OUTPUT FORMAT:
     1. Match Percentage: (Give a percentage)
@@ -44,25 +52,32 @@ def run_ai_audit(exam_text, syllabus_text):
        addressed to the teacher explaining the gaps or praising the alignment.
     
     [EXAM PAPER]:
-    {exam_text[:10000]} 
+    {exam_text[:15000]} 
     
     [MASTER SYLLABUS]:
-    {syllabus_text[:10000]}
+    {syllabus_text[:15000]}
     """
     try:
+        # Generate content
         response = model.generate_content(prompt)
         return response.text
     except Exception as e:
-        return f"AI Error: {e}"
+        # Specific error handling for the 404 issue
+        return f"AI Error: {str(e)}. Please check if the model name '{MODEL_ID}' is supported in your region."
 
 # --- 3. STREAMLIT UI ---
 st.set_page_config(page_title="Neo-Edu | Cybergeon", page_icon="🦋", layout="wide")
 
 # Sidebar
 with st.sidebar:
-    st.image("https://cybergeontechnologies.com/logo.jpg", width=200)
+    # Use a placeholder if logo URL fails
+    try:
+        st.image("https://cybergeontechnologies.com/logo.jpg", width=200)
+    except:
+        st.title("CYBERGEON")
+    
     st.title("Neo-Edu v3.0")
-    st.subheader("Intelligence: Gemini 1.5 Flash")
+    st.subheader(f"Intelligence: {MODEL_ID}")
     st.success("API Connection: ACTIVE")
     st.divider()
     st.write("**Cybergeon Technologies**")
@@ -89,10 +104,10 @@ if exam_file and syll_file:
             
             if not e_text or not s_text:
                 status.update(label="Parsing Failed", state="error")
-                st.error("Could not find text in one of the PDFs. Please ensure they are digital PDFs, not scanned photos.")
+                st.error("Could not find text in one of the PDFs. Please ensure they are digital PDFs (not scans/images).")
                 st.stop()
             
-            st.write("Consulting Gemini 1.5 Flash for comparison...")
+            st.write(f"Consulting {MODEL_ID} for comparison...")
             analysis_result = run_ai_audit(e_text, s_text)
             
             status.update(label="Audit Complete!", state="complete", expanded=False)
