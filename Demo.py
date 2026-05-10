@@ -1,57 +1,67 @@
 import streamlit as st
-import time
+import google.generativeai as genai
+from PyPDF2 import PdfReader
 
-# --- Page Config ---
-st.set_page_config(page_title="Neo-Edu | Cybergeon", page_icon="🦋")
+# --- PAGE CONFIG ---
+st.set_page_config(page_title="Neo-Edu | Cybergeon", page_icon="🦋", layout="wide")
 
-# --- Sidebar (The "AMD Proof" Hack) ---
-st.sidebar.image("https://cybergeontechnologies.com/wp-content/uploads/2024/02/cybergeon-logo.png", width=200) # Use your logo URL
-st.sidebar.title("System Status")
-st.sidebar.success("AMD ROCm: ACTIVE")
-st.sidebar.info("Compute: AMD Radeon™ GPU")
-st.sidebar.write("Model: Qwen-7B (Quantized)")
+# --- API INITIALIZATION ---
+# Securely fetching the API Key from Streamlit Secrets
+try:
+    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+    model = genai.GenerativeModel('gemini-1.5-flash')
+except:
+    st.error("API Key not found. Please configure GEMINI_API_KEY in Streamlit Secrets.")
 
-# --- Main UI ---
-st.title("Neo-Edu: Agentic School Admin")
-st.write("Autonomous Syllabus Audit & Faculty Coordination")
+# --- UTILITY FUNCTIONS ---
+def get_pdf_text(file):
+    reader = PdfReader(file)
+    return " ".join([page.extract_text() for page in reader.pages])
 
-uploaded_file = st.file_uploader("Upload Exam Paper (PDF/Doc)", type=['pdf', 'txt'])
-
-if uploaded_file:
-    with st.status("🚀 Neo Agent is Auditing...", expanded=True) as status:
-        st.write("Retrieving Master Syllabus from Vector DB...")
-        time.sleep(1)
-        st.write("Analyzing content using AMD-optimized kernels...")
-        time.sleep(2)
-        st.write("Cross-referencing Class 6 Hindi Requirements...")
-        time.sleep(1)
-        status.update(label="Audit Complete!", state="complete", expanded=False)
-
-    # --- Results ---
-    st.subheader("Audit Report")
+def agent_audit(paper_text, syllabus):
+    prompt = f"""
+    Context: You are Neo-Edu, an AI Administrative Agent for Cybergeon Technologies.
+    Task: Audit a teacher's exam paper against the provided syllabus.
     
-    col1, col2 = st.columns(2)
-    with col1:
-        st.metric(label="Syllabus Match", value="85%", delta="-15% (Missing Topics)")
+    SYLLABUS: {syllabus}
+    EXAM PAPER: {paper_text}
     
-    with col2:
-        st.error("Gap Detected: 'Grammar - Adjectives' missing.")
-
-    st.divider()
-    
-    # --- The Agentic Action ---
-    st.subheader("Autonomous Action")
-    st.write("The Agent has drafted the following notice for the teacher:")
-    
-    hindi_notice = """
-    प्रिय शिक्षक, 
-    कक्षा 6 हिन्दी (PT1) के प्रश्न पत्र में 'विशेषण' (Adjectives) अनुभाग शामिल नहीं है, 
-    जो कि पाठ्यक्रम के अनुसार अनिवार्य है। कृपया इसे अपडेट करें।
-    - Neo-Edu Admin Agent
+    1. List missing topics.
+    2. Assess if the difficulty level matches the grade.
+    3. IMPORTANT: Draft a correction notice for the teacher in HINDI.
     """
-    st.text_area("Draft Notification (Hindi)", value=hindi_notice, height=150)
-    
-    if st.button("Send to Faculty"):
-        st.balloons()
-        st.success("Notification sent to Ms. Manisha via Neo-Connect.")
+    response = model.generate_content(prompt)
+    return response.text
 
+# --- UI DESIGN ---
+st.title("Neo-Edu: Agentic School Administration")
+st.markdown("### Powered by **Cybergeon Technologies**")
+
+with st.sidebar:
+    st.image("https://cybergeontechnologies.com/wp-content/uploads/2024/02/cybergeon-logo.png")
+    st.divider()
+    syllabus_text = st.text_area("Step 1: Paste Master Syllabus", height=200, 
+                                placeholder="e.g., Class 6 Hindi PT1 covers: Nouns, Adjectives, Letter Writing.")
+
+# --- MAIN APP FLOW ---
+uploaded_file = st.file_uploader("Step 2: Upload Teacher's Draft (PDF)", type="pdf")
+
+if uploaded_file and syllabus_text:
+    if st.button("Step 3: Run Agentic Audit"):
+        with st.spinner("Agent is reasoning and cross-referencing..."):
+            # 1. Extraction
+            extracted_text = get_pdf_text(uploaded_file)
+            
+            # 2. Reasoning Loop
+            audit_report = agent_audit(extracted_text, syllabus_text)
+            
+            # 3. Output
+            st.divider()
+            st.subheader("📋 Neo-Edu Audit Report")
+            st.markdown(audit_report)
+            
+            if st.button("Confirm & Send to Faculty"):
+                st.success("Notification sent via Neo-Connect Gateway.")
+                st.balloons()
+else:
+    st.info("Please provide the syllabus in the sidebar and upload a PDF to begin.")
