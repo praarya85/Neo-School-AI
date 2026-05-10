@@ -78,7 +78,7 @@ st.set_page_config(page_title="Neo-Edu | Cybergeon", page_icon="🦋", layout="w
 
 with st.sidebar:
     st.title("Neo-Edu AI Agent")
-    st.subheader(f"Engine: {MODEL_ID}")
+    st.subheader(f"Engine: Neo 2.5")
     st.info("Status: High-Reasoning Mode Active")
     st.divider()
     st.write("**Cybergeon Technologies**")
