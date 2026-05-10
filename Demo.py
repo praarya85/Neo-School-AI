@@ -10,7 +10,7 @@ st.set_page_config(page_title="Neo-Edu | Cybergeon", page_icon="🦋", layout="w
 try:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
     # Using 'gemini-1.5-flash' - if this fails, change to 'gemini-pro'
-    model = genai.GenerativeModel('gemini-pro')
+    model = genai.GenerativeModel('gemini-1.0-pro')
 except Exception as e:
     st.error(f"Configuration Error: {e}")
 
