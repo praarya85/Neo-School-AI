@@ -3,7 +3,6 @@ import google.generativeai as genai
 from PyPDF2 import PdfReader
 
 # --- 1. CONFIGURATION & BRANDING ---
-# Use your actual logo URL here
 LOGO_URL = "https://cybergeontechnologies.com/logo.jpg" 
 
 st.set_page_config(
@@ -21,18 +20,15 @@ st.markdown(f"""
         font-family: 'Inter', sans-serif;
     }}
 
-    /* Professional Background */
     .main {{
         background-color: #fcfcfd;
     }}
 
-    /* Glassmorphism Sidebar */
     [data-testid="stSidebar"] {{
         background-color: #ffffff !important;
         border-right: 1px solid #f0f0f0;
     }}
 
-    /* Cybergeon Primary Button */
     .stButton > button {{
         width: 100%;
         background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
@@ -50,7 +46,6 @@ st.markdown(f"""
         transform: translateY(-2px);
     }}
 
-    /* Result Card Styling */
     .audit-card {{
         background: white;
         padding: 2.5rem;
@@ -58,6 +53,7 @@ st.markdown(f"""
         border: 1px solid #e5e7eb;
         box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
         line-height: 1.6;
+        color: #1f2937;
     }}
 </style>
 """, unsafe_allow_html=True)
@@ -69,7 +65,6 @@ else:
     st.error("API Key missing in Streamlit Secrets.")
     st.stop()
 
-# Using stable model ID for reliable performance
 MODEL_ID = 'gemini-2.5-flash' 
 model = genai.GenerativeModel(MODEL_ID)
 
@@ -108,7 +103,6 @@ with st.sidebar:
     st.caption("Mode: High-Reasoning")
     st.caption("Agent: Neo-Edu 2.5")
 
-# Header
 st.markdown("# 🦋 Neo-Edu: <span style='color:#4f46e5'>Syllabus Auditor</span>", unsafe_allow_html=True)
 st.markdown("Focusing on educational compliance and faculty excellence.")
 st.write("---")
@@ -122,7 +116,7 @@ with col2:
     st.markdown("### 📚 Master Syllabus")
     syll_file = st.file_uploader("Upload Syllabus Reference (PDF)", type=['pdf'])
 
-# --- 5. THE AUDIT PROCESS ---
+# --- 5. THE AUDIT PROCESS & DOWNLOAD LOGIC ---
 if exam_file and syll_file:
     if st.button("🚀 INITIATE DEEP AUDIT"):
         with st.status("Neo is analyzing documents...", expanded=True) as status:
@@ -131,18 +125,40 @@ if exam_file and syll_file:
             
             if e_text and s_text:
                 analysis = run_ai_audit(e_text, s_text)
+                # Store in session state so it persists during download interaction
+                st.session_state['last_analysis'] = analysis
                 status.update(label="Audit Complete", state="complete")
-                
-                st.markdown("### 📊 Analysis Result")
-                st.markdown(f'<div class="audit-card">{analysis}</div>', unsafe_allow_html=True)
-                
-                st.write("##")
-                if st.button("📧 Send to Faculty Portal"):
-                    st.balloons()
-                    st.success("Analysis dispatched to Cybergeon Management.")
             else:
                 status.update(label="Parsing Error", state="error")
-                st.error("Could not extract enough text from the PDFs. Please check the file quality.")
+                st.error("Could not extract enough text from the PDFs.")
+
+# Render Results if they exist in memory
+if 'last_analysis' in st.session_state:
+    st.markdown("### 📊 Analysis Result")
+    st.markdown(f'<div class="audit-card">{st.session_state["last_analysis"]}</div>', unsafe_allow_html=True)
+    
+    st.write("##")
+    
+    # Action Row: Download and Portal Submission
+    col_dl, col_portal = st.columns([1, 4])
+    
+    with col_dl:
+        # Prep report with a professional header for the text file
+        report_content = f"NEO-EDU AUDIT REPORT\nFirm: Cybergeon Technologies\nFile: {exam_file.name}\n" + ("="*30) + "\n\n"
+        report_content += st.session_state['last_analysis']
+        
+        st.download_button(
+            label="📥 Download Report",
+            data=report_content,
+            file_name=f"Audit_Report_{exam_file.name.replace('.pdf', '')}.txt",
+            mime="text/plain"
+        )
+    
+    with col_portal:
+        if st.button("📧 Send to Faculty Portal"):
+            st.balloons()
+            st.success("Analysis dispatched to Cybergeon Management.")
+            
 else:
     st.write("##")
     st.info("Waiting for document upload to begin the analysis.")
